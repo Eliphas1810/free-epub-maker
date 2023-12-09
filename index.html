@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Free ePub Maker by JavaScript in Browser Only(JavaScriptでブラウザだけで無料で電子書籍を作成)</title>
+
+        <!-- This application is under the "Public Domain". -->
+        <!-- This application uses "JSZip" and "uuidjs" -->
+        <!-- "JSZip" is under the "MIT License" or the "GPLv3 License". -->
+        <!-- In use of "JSZip", application developers can select "MIT License" or the "GPLv3 License". -->
+        <!-- This application uses "JSZip" under the "MIT License". -->
+        <!-- "uuidjs" is under the "MIT License". -->
+
+        <!-- JSZip -->
+        <!-- MIT License -->
+        <!-- Copyright (c) 2009-2016 Stuart Knightley, David Duponchel, Franz Buchinger, António Afonso -->
+        <!-- https://opensource.org/licenses/mit-license.php -->
+
+        <!-- uuidjs -->
+        <!-- MIT License -->
+        <!-- Copyright (c) 2010-2020 Robert Kieffer and other contributors -->
+        <!-- https://opensource.org/licenses/mit-license.php -->
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/node-uuid/1.4.8/uuid.min.js"></script>
+    </head>
+    <body>
+        <div>
+            <input type="radio" name="language" id="en"></input>English
+            　
+            <input type="radio" name="language" id="ja" checked="checked"></input>日本語
+        </div>
+        <br />
+        <div>
+            <input type="radio" name="horizontalAndVerticalWriting" id="horizontalWriting" checked="checked"></input><span id="horizontalWritingLabel">横書き</span>
+            　
+            <input type="radio" name="horizontalAndVerticalWriting" id="verticalWriting"></input><span id="verticalWritingLabel">縦書き</span>
+        </div>
+        <br />
+        <div>
+            <span id="filesLabel">テキストファイル(と画像ファイル)を選択</span>　<input type="file" id="file" accept=".txt, .jpeg, .jpg, .png" multiple />
+        </div>
+        <br />
+        <div>
+            <span id="titleLabel">電子書籍のタイトル</span>　<input type="text" id="title" />
+        </div>
+        <br />
+        <div>
+            <span id="authorLabel">著者</span>　<input type="text" id="author" />
+        </div>
+        <br />
+        <div>
+            <button type="button" id="makeEPub">電子書籍(ePub)を作成</button>
+        </div>
+        <br />
+        <p id="message"></p>
+        <br />
+        <br />
+        <p>From selected one or more text files( and image files), this application makes ePub file.</p>
+        <p>This application supports .txt, .jpeg or .jpg and .png.</p>
+        <br />
+        <p>By the name inputted in the "Book Title", this application make the .epub file.</p>
+        <br />
+        <p>One or more numeric characters and a space character of the head of each text file name are deleted, and the name without the filename extension is used as a title of a episode.</p>
+        <p>For example, the "Episode 1" of "0001 Episode 1.txt" is used as a title of a episode.</p>
+        <br />
+        <p>This application sorts text files in alphabetical order of the text file name.</p>
+        <p>So, like, for example, "0001 Episode1.txt" and "0002 Episode2.txt" and so on, by the rule, "TheEpisodeNumber TheTitleOfTheEpisode.txt", each text file name must be named.</p>
+        <br />
+        <p>The character code of each text file must be UTF-8.</p>
+        <br />
+        <p>Each image file name is used as the "id" attribute value of XHTML tag.</p>
+        <p>So, character types of each image file name must be alphabetic characters and numeric characters and the hyphen(-) and the underscore(_).</p>
+        <p>And, the character type of the first character of each image file name must be a alphabetic character.</p>
+        <br />
+        <p>Vertically long image files are recommended.</p>
+        <br />
+        <p>If "cover.jpg" or "cover.jpeg" or "cover.png" exists, the image file is used as the cover image of the ePub file to be made.</p>
+        <br />
+        <p>If a line in each text file ends ".jpg" or ".jpeg" or ".png", the text of the line is considered as the specification of the image file and converted to the HTML img tag.</p>
+        <p>For example, "episode1image1.png" is converted to "&lt;img id=&quot;episode1image1&quot; src=&quot;episode1image1.png&quot; /&gt;".</p>
+        <br />
+        <p>If a line in each text file is "Kanji(HiraganaOrKatakana)", it is converted to the HTML ruby tag.</p>
+        <p>For example, "漢字(ひらがなかカタカナ)" is converted to "&lt;ruby&gt;漢字&lt;rt&gt;ひらがなかカタカナ&lt;/rt&gt;&lt;/ruby&gt;".</p>
+        <br />
+        <p>If a line in each text file is "｜Text《Ruby》", it is converted to the HTML ruby tag.</p>
+        <p>The "｜" of the above is the Full-width Vertical Line.</p>
+        <p>For example, "｜Text《Ruby》" is converted to "&lt;ruby&gt;Text&lt;rt&gt;Ruby&lt;/rt&gt;&lt;/ruby&gt;".</p>
+        <br />
+        <p>If a line in each text file is "Kanji《HiraganaOrKatakana》", it is converted to the HTML ruby tag.</p>
+        <p>For example, "漢字《ひらがなかカタカナ》" is converted to "&lt;ruby&gt;漢字&lt;rt&gt;ひらがなかカタカナ&lt;/rt&gt;&lt;/ruby&gt;".</p>
+        <br />
+        <p>A empty line in each text file is converted to "&lt;p&gt;　&lt;/p&gt;".</p>
+        <p>The "　" of the above is the Full-width Space Character.</p>
+        <br />
+        <p>In each runtime, a new version 4 UUID is generated.</p>
+        <p>The name inputted in "Author" is used as the author and the publisher of the ePub.</p>
+        <p>The date and time of the runtime is used as the "date and time of publication" and the "last modified date and time" of ePub.</p>
+        <p></p>
+        <p>At 3/13/2021, if text and the image of "height: 100%;" are mixed, the "Kindle" on "FireHD8Plus" did not show the image.</p>
+        <p>So, this application set "height: 90%;" to HTML img tags.</p>
+        <br />
+        <p>This application does not run on some server.</p>
+        <p>The browser on your computer or smartphone or some device runs this application.</p>
+        <p>For downloading the "JSZip" and the "uuidjs", to run this application needs to be able to access to the internet. </p>
+        <br />
+        <br />
+        <br />
+        <br />
+        <p>　選択した.txtファイル(と.jpgファイル、.jpegファイル、.pngファイル)から電子書籍(ePub)を作成します。</p>
+        <br />
+        <p>　「電子書籍のタイトル」に指定した名前で電子書籍の.epubファイルを作成します。</p>
+        <p>　例えば、「電子書籍のタイトル」に「正法眼蔵の現代語訳」を指定した場合は、「正法眼蔵の現代語訳.epub」という名前のファイルを作成します。</p>
+        <br />
+        <p>　.txtファイル名の先頭から、半角数字の連続と半角空白を除去した名前を、各話の見出しにします。</p>
+        <p>　例えば、「0001 第一話.txtファイル」が存在する場合は「第一話」を見出しにします。</p>
+        <br />
+        <p>　.txtファイル名の文字順で並べるので、例えば「0001 第一話.txt」、「0002 第二話.txt」のように、「半角数字の番号 順番の各話の見出し.txt」といった規則で.txtファイル名をつけてください。</p>
+        <br />
+        <p>　.txtファイルの文字コードはUTF-8にしてください。</p>
+        <br />
+        <p>　.jpgファイル名、.jpegファイル名、.pngファイル名は、XHTMLのidとして利用するため、半角英数字と半角ハイフン(-)と半角下線(_)による名前にしてください。</p>
+        <p>　.jpgファイル名、.jpegファイル名、.pngファイル名は、XHTMLのidとして利用するため、最初の文字は半角英字にしてください。</p>
+        <br />
+        <p>　縦長の画像を用意してください。</p>
+        <br />
+        <p>　「cover.jpg」ファイルか「cover.jpeg」ファイルか「cover.png」ファイルを電子書籍(ePub)の表紙画像にします。</p>
+        <br />
+        <p>　.txtファイル内の、ある行が「.jpg」か「.jpeg」か「.png」で終わる場合は、画像ファイル名の指定とみなして、HTMLのimgタグに置換します。</p>
+        <p>　例えば、ある行が「episode1image1.png」の場合は、「&lt;img id=&quot;episode1image1&quot; src=&quot;episode1image1.png&quot; /&gt;」に置換します。</p>」
+        <br />
+        <p>　「漢字(ひらがなかカタカナ)」を「&lt;ruby&gt;漢字&lt;rt&gt;ひらがなかカタカナ&lt;/rt&gt;&lt;/ruby&gt;」に置換します。</p>
+        <br />
+        <p>　「｜テキスト《ルビ》」を「&lt;ruby&gt;テキスト&lt;rt&gt;ルビ&lt;/rt&gt;&lt;/ruby&gt;」に置換します。</p>
+        <p>　上記の「｜」は全角縦線です。</p>
+        <p>　半角縦線(|)の場合は、HTMLのrubyタグに置換しません。</p>
+        <br />
+        <p>　「漢字《ひらがなかカタカナ》」を「&lt;ruby&gt;漢字&lt;rt&gt;ひらがなかカタカナ&lt;/rt&gt;&lt;/ruby&gt;」に置換します。</p>
+        <br />
+        <p>　空行を「&lt;p&gt;　&lt;/p&gt;」に置換します。</p>
+        <p>　上記の「　」は全角空白です。</p>
+        <br />
+        <p>　電子書籍(ePub)を作成するたびに新たにバージョン4のUUIDを生成します。</p>
+        <p>　記入された著者を著者と出版者とします。</p>
+        <p>　実行された日時を最終更新日時と出版日とします。</p>
+        <br />
+        <p>　2021年3月13日時点で、FireHD8PlusタブレットのKindleアプリは文字とheight: 100%;の画像が混在していると画像を表示してくれない事が有るので、画像とheight: 90%;に設定しています。</p>
+        <br />
+        <p>　何らかのサーバー上で動作する訳ではありません。</p>
+        <p>　あなたのパソコンやスマホなどのブラウザーが動作させます。</p>
+        <p>　動作させるには、JSZipとuuidjsをダウンロードするために、ネットにアクセスできる必要があります。</p>
+
+
+
+
+        <script>
+
+//In HTML escape, 'must be converted to &#39; .
+function escapeHtml(string) {
+    string = string.replaceAll(/&/g, "&amp;");
+    string = string.replaceAll(/"/g, "&quot;");
+    string = string.replaceAll(/'/g, "&#39;");
+    string = string.replaceAll(/</g, "&lt;");
+    string = string.replaceAll(/>/g, "&gt;");
+    return string;
+}
+
+//In XML escape, 'must be converted to &apos; .
+function escapeXml(string) {
+    string = string.replaceAll(/&/g, "&amp;");
+    string = string.replaceAll(/"/g, "&quot;");
+    string = string.replaceAll(/'/g, "&apos;");
+    string = string.replaceAll(/</g, "&lt;");
+    string = string.replaceAll(/>/g, "&gt;");
+    return string;
+}
+
+function $(id) {
+    return document.getElementById(id);
+}
+
+$("en").onclick = function () {
+    if ($("en").checked) {
+        $("horizontalWritingLabel").innerHTML = "Horizontal Writing";
+        $("verticalWritingLabel").innerHTML = "Vertical Writing (* Not Recommended for English)";
+        $("filesLabel").innerHTML = "Select One or More Text Files( and Image Files)";
+        $("titleLabel").innerHTML = "Book Title";
+        $("authorLabel").innerHTML = "Author";
+        $("makeEPub").innerHTML = "Make ePub";
+
+        $("horizontalWriting").checked = true;
+    }
+};
+
+$("ja").onclick = function () {
+    if ($("ja").checked) {
+        $("horizontalWritingLabel").innerHTML = "横書き";
+        $("verticalWritingLabel").innerHTML = "縦書き";
+        $("filesLabel").innerHTML = "1つ以上のテキストファイル(と画像ファイル)を選択";
+        $("titleLabel").innerHTML = "電子書籍のタイトル";
+        $("authorLabel").innerHTML = "著者";
+        $("makeEPub").innerHTML = "電子書籍(ePub)を作成";
+    }
+};
+
+function readAsArrayBufferSync(file) {
+    return new Promise(function (resolve, reject) {
+        var fileReader = new FileReader();
+        fileReader.onload = function () { resolve(fileReader.result); };
+        fileReader.onerror = function () { reject(fileReader.error); };
+        fileReader.readAsArrayBuffer(file);
+    });
+}
+
+function readAsTextSync(file) {
+    return new Promise(function (resolve, reject) {
+        var fileReader = new FileReader();
+        fileReader.onload = function () { resolve(fileReader.result); };
+        fileReader.onerror = function () { reject(fileReader.error); };
+        fileReader.readAsText(file);
+    });
+}
+
+$("makeEPub").onclick = async function () {
+
+    $("message").innerHTML = "";
+
+    var title = $("title").value;
+    var author = $("author").value;
+
+    if (title == "") {
+        if ($("ja").checked) {
+            $("message").innerHTML = "電子書籍のタイトルを記入してください。";
+        } else {
+            $("message").innerHTML = "Could you input the book title?";
+        }
+        return;
+    }
+    if (author == "") {
+        if ($("ja").checked) {
+            $("message").innerHTML = "著者を記入してください。";
+        } else {
+            $("message").innerHTML = "Could you input the author?";
+        }
+        return;
+    }
+
+    //For the "Date and Time of Publication" and the "Last Modified Date and Time" in the ".opf" file.
+    //The milli seconds must be deleted.
+    var epubMakeDateTimeXml = new Date().toISOString().replace(/\.[0-9]{3}/g, "");
+
+    var textFileArray = [];
+    var imageFileArray = [];
+    var coverImageFile = null;
+
+    var files = $("file").files;
+    for (var index = 0; index < files.length; index++) {
+        var file = files[index];
+
+        var name = file.name;
+        var type = file.type;
+        if (type == "text/plain") {
+            textFileArray.push(file);
+        } else if (type == "image/jpeg" || type == "image/png") {
+            imageFileArray.push(file);
+            if (name.match(/^cover\.jpe?g$|^cover\.png$/gi) != null) {
+                coverImageFile = file;
+            }
+        }
+    }
+
+    textFileArray.sort();
+    imageFileArray.sort();
+
+    if (textFileArray.length == 0) {
+        if ($("ja").checked) {
+            $("message").innerHTML = ".txtファイルを1つ以上、選択してください。";
+        } else {
+            $("message").innerHTML = 'Could you select one or more text files?';
+        }
+        return;
+    }
+
+    var jsZip = new JSZip();
+
+    jsZip.file("mimetype", "application/epub+zip");
+
+    jsZip.file(
+        "META-INF/container.xml",
+        [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            '<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">',
+            '    <rootfiles>',
+            '        <rootfile full-path="opf.opf" media-type="application/oebps-package+xml"/>',
+            '    </rootfiles>',
+            '</container>'
+        ].join("\n")
+    );
+
+    var opfArray = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<package unique-identifier="pub-id" version="3.0" xmlns="http://www.idpf.org/2007/opf">',
+        '    <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">',
+        '        <dc:identifier id="pub-id">urn:uuid:' + escapeXml(uuid.v4().toUpperCase()) + '</dc:identifier>',
+        '        <dc:title>' + escapeXml(title) + '</dc:title>',
+        '        <dc:language>ja</dc:language>',
+        '        <meta property="dcterms:modified">' + epubMakeDateTimeXml + '</meta>',
+        '',
+        '        <dc:creator id="creator1">' + escapeXml(author) + '</dc:creator>',
+        '        <meta refines="#creator1" property="role" scheme="marc:relators" id="role">aut</meta>',
+        '',
+        '        <dc:publisher>' + escapeXml(author) + '</dc:publisher>',
+        '        <dc:date>' + epubMakeDateTimeXml + '</dc:date>',
+        '    </metadata>',
+        '    <manifest>',
+        '        <item id="css" href="common.css" media-type="text/css"/>',
+        '        <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>'
+    ];
+    //If "cover.jpg" or "cover.jpeg" or "cover.png" exists,
+    if (coverImageFile != null) {
+        opfArray.push('        <item id="cover" href="' + coverImageFile.name + '" media-type="' + coverImageFile.type + '" properties="cover-image"/>');
+    }
+    //The following is repeated the number of text files.
+    for (var index = 0; index < textFileArray.length; index++) {
+        opfArray.push('        <item id="index' + (index + 1) + '" href="index' + (index + 1) + '.xhtml" media-type="application/xhtml+xml"/>');
+    }
+    //The following is repeated the number of image files.
+    for (var index = 0; index < imageFileArray.length; index++) {
+        var name = imageFileArray[index].name;
+
+        //The "cover.jpg" or "cover.jpeg" or "cover.png" is excluded.
+        if (name.match(/^cover\.jpe?g$|^cover\.png$/gi) == null) {
+            var type = imageFileArray[index].type;
+            opfArray.push('        <item id="' + escapeXml(name.replace(/\.jpe?g$|\.png$/gi, "")) + '" href="' + escapeXml(name) + '" media-type="' + type + '"/>');
+        }
+    }
+    opfArray.push('    </manifest>');
+
+    if ($("verticalWriting").checked) {
+        opfArray.push('    <spine page-progression-direction="rtl">');
+    } else {
+        opfArray.push('    <spine>');
+    }
+
+    //The following is repeated the number of text files.
+    for (var index = 0; index < textFileArray.length; index++) {
+       opfArray.push('        <itemref idref="index' + (index + 1) + '"/>');
+    }
+    opfArray.push('    </spine>');
+    opfArray.push('</package>\n');
+
+    jsZip.file("opf.opf", opfArray.join("\n"));
+
+    if ($("verticalWriting").checked) {
+
+        jsZip.file(
+            "common.css",
+            [
+                "html {",
+                "    -webkit-writing-mode: vertical-rl;",
+                "    -webkit-text-orientation: mixed;",
+                "",
+                "    -epub-writing-mode: vertical-rl;",
+                "    -epub-text-orientation: mixed;",
+                "",
+                "    writing-mode: vertical-rl;",
+                "    text-orientation: mixed;",
+                "}",
+                "",
+                "h1 {",
+                "    margin: 0;",
+                "    display: block;",
+                "    width: 100%;",
+                "    text-align: center;",
+                "    font-size: 2rem;",
+                "    font-weight: bold;",
+                "}",
+                "",
+                "h2 {",
+                "    margin: 0;",
+                "    margin-bottom: 1.5rem;",
+                "    page-break-before: always;",
+                "    display: block;",
+                "    width: 100%;",
+                "    text-align: center;",
+                "    font-size: 1.5rem;",
+                "    font-weight: bold;",
+                "}",
+                "",
+                "p {",
+                "    margin: 0;",
+                "}",
+                "",
+                "img {",
+                "    display: block;",
+                "    height: 90%;",
+                "    margin: auto;",
+                "}\n"
+            ].join("\n")
+        );
+
+    } else {
+
+        jsZip.file(
+            "common.css",
+            [
+                "h1 {",
+                "    margin: 0;",
+                "    display: block;",
+                "    width: 100%;",
+                "    text-align: center;",
+                "    font-size: 2rem;",
+                "    font-weight: bold;",
+                "}",
+                "",
+                "h2 {",
+                "    margin: 0;",
+                "    margin-bottom: 1.5rem;",
+                "    page-break-before: always;",
+                "    display: block;",
+                "    width: 100%;",
+                "    text-align: center;",
+                "    font-size: 1.5rem;",
+                "    font-weight: bold;",
+                "}",
+                "",
+                "p {",
+                "    margin: 0;",
+                "}",
+                "",
+                "img {",
+                "    display: block;",
+                "    height: 90%;",
+                "    margin: auto;",
+                "}\n"
+            ].join("\n")
+        );
+    }
+
+    var navArray = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="ja" xml:lang="ja">',
+        '    <head>'
+    ];
+    if ($("ja").checked) {
+        navArray.push('        <title>目次</title>');
+    } else {
+        navArray.push('        <title>The Table of Contents</title>');
+    }
+    navArray.push('        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>');
+    navArray.push('    </head>');
+    navArray.push('    <body>');
+    navArray.push('        <nav epub:type="toc">');
+    navArray.push('            <ol>');
+
+    //The following is repeated the number of text files.
+    for (var index = 0; index < textFileArray.length; index++) {
+        var name = textFileArray[index].name;
+        navArray.push('                <li><a href="index' + (index + 1) + '.xhtml#episode' + (index + 1) + '">' + escapeHtml(name.replaceAll(/^[0-9]*[ 　]*|\.txt$/gi, "")) + '</a></li>');
+    }
+    navArray.push('            </ol>');
+    navArray.push('        </nav>');
+    navArray.push('    </body>');
+    navArray.push('</html>');
+
+    jsZip.file("nav.xhtml", navArray.join("\n"));
+
+    //Image files is zipped.
+    //The following is repeated the number of image files.
+    for (var index = 0; index < imageFileArray.length; index++) {
+        var name = imageFileArray[index].name;
+
+        var data = await readAsArrayBufferSync(imageFileArray[index]);
+
+        jsZip.file(name, data);
+    }
+
+    //The following is repeated the number of text files.
+    for (var index = 0; index < textFileArray.length; index++) {
+        var name = textFileArray[index].name;
+        var indexXhtmlArray = [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            '<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="ja" xml:lang="ja">',
+            '    <head>',
+            '        <title>' + escapeHtml(title) + '</title>',
+            '        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>',
+            '        <link href="common.css" rel="stylesheet" type="text/css"/>',
+            '    </head>',
+            '    <body>'
+        ];
+        if (index == 0) {
+            indexXhtmlArray.push('        <h1>' + escapeHtml(title) + '</h1>');
+        }
+        indexXhtmlArray.push('        <h2 id="episode' + (index + 1) + '">' + escapeHtml(name.replaceAll(/^[0-9]*[ 　]*|\.txt$/gi, "")) + '</h2>');
+
+        var text = await readAsTextSync(textFileArray[index]);
+
+        text = text.replaceAll(/\r\n/g, "\n");
+        text = text.replaceAll(/\r/g, "\n");
+        var lineArray = text.split("\n");
+        for (var i = 0; i < lineArray.length; i++) {
+            var line = lineArray[i];
+
+            //If the readed line ends ".jpg" or "jpeg" or ".png",
+            if (line.match(/^.+\.jpe?g$|^.+\.png$/gi) != null) {
+                //the readed line is converted to HTML img tag.
+                indexXhtmlArray.push('        <img id="' + escapeHtml(line.replace(/\.jpe?g$|\.png$/gi, "")) + '" src="' + escapeHtml(line) + '" />');
+            //If the readed line is empty,
+            } else if (line == "") {
+                //<p>　</p> is outputted.
+                //　of the above is the Full-width Space Character.
+                indexXhtmlArray.push('        <p>　</p>');
+            //If the readed line is the ordinary text,
+            } else {
+
+                //HTML escape
+                var string = escapeHtml(line);
+
+                //Kanji(HiraganaOrKatakana) is converted to <ruby>Kanji<rt>HiraganaOrKatakana</rt></ruby> .
+                string = string.replaceAll(/([一-鿋々]+)\(([ぁ-ゖァ-ヺー]+)\)/g, '<ruby>$1<rt>$2</rt></ruby>');
+
+                //｜Text《Ruby》 is converted to <ruby>Text<rt>Ruby</rt></ruby> .
+                //｜ is the "Full-width Vertical Line".
+                string = string.replaceAll(/｜([^《]+)《([^》]+)》/g, '<ruby>$1<rt>$2</rt></ruby>');
+
+                //Kanji《HiraganaOrKatakana》 is converted to <ruby>Kanji<rt>HiraganaOrKatakana</rt></ruby> .
+                string = string.replaceAll(/([一-鿋々]+)《([ぁ-ゖァ-ヺー]+)》/g, '<ruby>$1<rt>$2</rt></ruby>');
+
+                indexXhtmlArray.push('        <p>' + string + '</p>');
+            }
+        }
+        indexXhtmlArray.push('    </body>');
+        indexXhtmlArray.push('</html>\n');
+
+        jsZip.file("index" + (index + 1) + ".xhtml", indexXhtmlArray.join("\n"));
+    }
+
+    jsZip.generateAsync({type:"blob"}).then(function (data) {
+        var url = URL.createObjectURL(data);
+
+        var aTagElement = document.createElement("a");
+        aTagElement.href = url;
+        aTagElement.download = (title + ".epub");
+
+        aTagElement.click();
+
+        URL.revokeObjectURL(url);
+    });
+
+    if ($("ja").checked) {
+        $("message").innerHTML = "電子書籍(ePub)の作成が完了しました。";
+    } else {
+        $("message").innerHTML = "The makeing of the ePub file is completed.";
+    }
+};
+
+        </script>
+    </body>
+</html>
