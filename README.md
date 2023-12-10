@@ -1,4 +1,4 @@
 # free-epub-maker
-Free ePub Maker by JavaScript in Browser Only, mainly for Japanese.
+Free ePub Maker by JavaScript in Browser Only.
 
 Public Domain.
