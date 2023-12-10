@@ -2,7 +2,7 @@
 <html lang="ja">
     <head>
         <meta charset="UTF-8" />
-        <title>Free ePub Maker by JavaScript in Browser Only(JavaScriptでブラウザだけで無料で電子書籍を作成)</title>
+        <title>Free ePub Maker by JavaScript in Browser Only(ブラウザだけでJavaScriptで無料で電子書籍を作成)</title>
 
         <!-- This application is under the "Public Domain". -->
         <!-- This application uses "JSZip" and "uuidjs" -->
@@ -228,8 +228,12 @@ $("makeEPub").onclick = async function () {
     var title = $("title").value;
     var author = $("author").value;
 
+    var isJa = $("ja").checked;
+
+    var isVerticalWriting = $("verticalWriting").checked;
+
     if (title == "") {
-        if ($("ja").checked) {
+        if (isJa) {
             $("message").innerHTML = "電子書籍のタイトルを記入してください。";
         } else {
             $("message").innerHTML = "Could you input the book title?";
@@ -237,7 +241,7 @@ $("makeEPub").onclick = async function () {
         return;
     }
     if (author == "") {
-        if ($("ja").checked) {
+        if (isJa) {
             $("message").innerHTML = "著者を記入してください。";
         } else {
             $("message").innerHTML = "Could you input the author?";
@@ -273,7 +277,7 @@ $("makeEPub").onclick = async function () {
     imageFileArray.sort();
 
     if (textFileArray.length == 0) {
-        if ($("ja").checked) {
+        if (isJa) {
             $("message").innerHTML = ".txtファイルを1つ以上、選択してください。";
         } else {
             $("message").innerHTML = 'Could you select one or more text files?';
@@ -302,20 +306,24 @@ $("makeEPub").onclick = async function () {
         '<package unique-identifier="pub-id" version="3.0" xmlns="http://www.idpf.org/2007/opf">',
         '    <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">',
         '        <dc:identifier id="pub-id">urn:uuid:' + escapeXml(uuid.v4().toUpperCase()) + '</dc:identifier>',
-        '        <dc:title>' + escapeXml(title) + '</dc:title>',
-        '        <dc:language>ja</dc:language>',
-        '        <meta property="dcterms:modified">' + epubMakeDateTimeXml + '</meta>',
-        '',
-        '        <dc:creator id="creator1">' + escapeXml(author) + '</dc:creator>',
-        '        <meta refines="#creator1" property="role" scheme="marc:relators" id="role">aut</meta>',
-        '',
-        '        <dc:publisher>' + escapeXml(author) + '</dc:publisher>',
-        '        <dc:date>' + epubMakeDateTimeXml + '</dc:date>',
-        '    </metadata>',
-        '    <manifest>',
-        '        <item id="css" href="common.css" media-type="text/css"/>',
-        '        <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>'
+        '        <dc:title>' + escapeXml(title) + '</dc:title>'
     ];
+    if (isJa) {
+        opfArray.push('        <dc:language>ja</dc:language>');
+    } else {
+        opfArray.push('        <dc:language>en</dc:language>');
+    }
+    opfArray.push('        <meta property="dcterms:modified">' + epubMakeDateTimeXml + '</meta>');
+    opfArray.push('');
+    opfArray.push('        <dc:creator id="creator1">' + escapeXml(author) + '</dc:creator>');
+    opfArray.push('        <meta refines="#creator1" property="role" scheme="marc:relators" id="role">aut</meta>');
+    opfArray.push('');
+    opfArray.push('        <dc:publisher>' + escapeXml(author) + '</dc:publisher>');
+    opfArray.push('        <dc:date>' + epubMakeDateTimeXml + '</dc:date>');
+    opfArray.push('    </metadata>');
+    opfArray.push('    <manifest>');
+    opfArray.push('        <item id="css" href="common.css" media-type="text/css"/>');
+    opfArray.push('        <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>');
     //If "cover.jpg" or "cover.jpeg" or "cover.png" exists,
     if (coverImageFile != null) {
         opfArray.push('        <item id="cover" href="' + coverImageFile.name + '" media-type="' + coverImageFile.type + '" properties="cover-image"/>');
@@ -336,7 +344,7 @@ $("makeEPub").onclick = async function () {
     }
     opfArray.push('    </manifest>');
 
-    if ($("verticalWriting").checked) {
+    if (isVerticalWriting) {
         opfArray.push('    <spine page-progression-direction="rtl">');
     } else {
         opfArray.push('    <spine>');
@@ -351,7 +359,7 @@ $("makeEPub").onclick = async function () {
 
     jsZip.file("opf.opf", opfArray.join("\n"));
 
-    if ($("verticalWriting").checked) {
+    if (isVerticalWriting) {
 
         jsZip.file(
             "common.css",
@@ -438,11 +446,15 @@ $("makeEPub").onclick = async function () {
     }
 
     var navArray = [
-        '<?xml version="1.0" encoding="UTF-8"?>',
-        '<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="ja" xml:lang="ja">',
-        '    <head>'
+        '<?xml version="1.0" encoding="UTF-8"?>'
     ];
-    if ($("ja").checked) {
+    if (isJa) {
+        navArray.push('<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="ja" xml:lang="ja">');
+    } else {
+        navArray.push('<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="en" xml:lang="en">');
+    }
+    navArray.push('    <head>');
+    if (isJa) {
         navArray.push('        <title>目次</title>');
     } else {
         navArray.push('        <title>The Table of Contents</title>');
@@ -479,15 +491,19 @@ $("makeEPub").onclick = async function () {
     for (var index = 0; index < textFileArray.length; index++) {
         var name = textFileArray[index].name;
         var indexXhtmlArray = [
-            '<?xml version="1.0" encoding="UTF-8"?>',
-            '<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="ja" xml:lang="ja">',
-            '    <head>',
-            '        <title>' + escapeHtml(title) + '</title>',
-            '        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>',
-            '        <link href="common.css" rel="stylesheet" type="text/css"/>',
-            '    </head>',
-            '    <body>'
+            '<?xml version="1.0" encoding="UTF-8"?>'
         ];
+        if (isJa) {
+            indexXhtmlArray.push('<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="ja" xml:lang="ja">');
+        } else {
+            indexXhtmlArray.push('<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="en" xml:lang="en">');
+        }
+        indexXhtmlArray.push('    <head>');
+        indexXhtmlArray.push('        <title>' + escapeHtml(title) + '</title>');
+        indexXhtmlArray.push('        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>');
+        indexXhtmlArray.push('        <link href="common.css" rel="stylesheet" type="text/css"/>');
+        indexXhtmlArray.push('    </head>');
+        indexXhtmlArray.push('    <body>');
         if (index == 0) {
             indexXhtmlArray.push('        <h1>' + escapeHtml(title) + '</h1>');
         }
@@ -547,7 +563,7 @@ $("makeEPub").onclick = async function () {
         URL.revokeObjectURL(url);
     });
 
-    if ($("ja").checked) {
+    if (isJa) {
         $("message").innerHTML = "電子書籍(ePub)の作成が完了しました。";
     } else {
         $("message").innerHTML = "The makeing of the ePub file is completed.";
