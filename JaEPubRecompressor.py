@@ -3,7 +3,6 @@ from tkinter import filedialog
 from tkinter import messagebox
 import os
 import glob
-import re
 import tempfile
 import shutil
 import zipfile
