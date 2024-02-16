@@ -4,4 +4,20 @@
         <loc>https://eliphas1810.github.io/free-epub-maker/index.html</loc>
         <lastmod>2024-02-12</lastmod>
     </url>
+    <url>
+        <loc>https://eliphas1810.github.io/free-epub-maker/JaEPubRecompressor.py</loc>
+        <lastmod>2024-01-25</lastmod>
+    </url>
+    <url>
+        <loc>https://eliphas1810.github.io/free-epub-maker/JaFreeEPubMaker.py</loc>
+        <lastmod>2023-12-10</lastmod>
+    </url>
+    <url>
+        <loc>https://eliphas1810.github.io/free-epub-maker/JaVerticalWritingFreeEPubMaker.py</loc>
+        <lastmod>2024-01-24</lastmod>
+    </url>
+    <url>
+        <loc>https://eliphas1810.github.io/free-epub-maker/Main.java</loc>
+        <lastmod>2023-12-10</lastmod>
+    </url>
 </urlset>
