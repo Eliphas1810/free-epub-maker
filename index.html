@@ -982,8 +982,17 @@ $("makeEPub").onclick = async function () {
         }
     }
 
-    textFileArray.sort();
-    imageFileArray.sort();
+    var compare = function (a, b) {
+        if (a.name == b.name) {
+            return 0;
+        }
+        if (a.name < b.name) {
+            return -1;
+        }
+        return 1;
+    };
+    textFileArray.sort(compare);
+    imageFileArray.sort(compare);
 
     if (textFileArray.length == 0) {
         if (isJa) {
