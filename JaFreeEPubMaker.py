@@ -298,7 +298,7 @@ def make_epub():
                             # 漢字《ひらがなかカタカナ》をルビに置換
                             text = re.sub("([一-鿋々]+)《([ぁ-ゖァ-ヺー]+)》", "<ruby>\\1<rt>\\2</rt></ruby>", text)
                             file.write('        <p>' + text + '</p>\n')
-                file.write('　　</body>\n')
+                file.write('    </body>\n')
                 file.write('</html>\n')
 
         # .epubファイルを作成
