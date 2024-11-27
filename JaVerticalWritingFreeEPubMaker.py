@@ -116,13 +116,13 @@ def make_epub():
             # ファイルの場合
             if os.path.isfile(os.path.join(in_dir, file_name)):
                 # .txtファイルの場合
-                if re.match("^.+\.[tT][xX][tT]$", file_name):
+                if re.match("^.+\\.[tT][xX][tT]$", file_name):
                     text_file_name_list.append(file_name)
                 # .jpgファイルか.pngファイルの場合
-                elif re.match("^.+\.[jJ][pP][eE]?[gG]$|^.+\.[pP][nN][gG]$", file_name):
+                elif re.match("^.+\\.[jJ][pP][eE]?[gG]$|^.+\\.[pP][nN][gG]$", file_name):
                     image_file_name_list.append(file_name)
                     # cover.jpgかcover.pngの場合
-                    if re.match("^cover\.[jJ][pP][eE]?[gG]$|^cover\.[pP][nN][gG]$", file_name):
+                    if re.match("^cover\\.[jJ][pP][eE]?[gG]$|^cover\\.[pP][nN][gG]$", file_name):
                         cover_image_file_name = file_name
 
         text_file_name_list.sort()
@@ -174,10 +174,10 @@ def make_epub():
             # cover.jpgかcover.pngが存在する場合
             if cover_image_file_name != "":
                 # cover.jpgの場合
-                if re.match("^cover\.[jJ][pP][eE]?[gG]$", cover_image_file_name):
+                if re.match("^cover\\.[jJ][pP][eE]?[gG]$", cover_image_file_name):
                     file.write('        <item id="cover" href="' + cover_image_file_name + '" media-type="image/jpeg" properties="cover-image"/>\n')
                 # cover.pngの場合
-                elif re.match("^cover\.[pP][nN][gG]$", cover_image_file_name):
+                elif re.match("^cover\\.[pP][nN][gG]$", cover_image_file_name):
                     file.write('        <item id="cover" href="' + cover_image_file_name + '" media-type="image/png" properties="cover-image"/>\n')
             # .txtファイルの数だけ、くり返し
             for number in range(1, len(text_file_name_list) + 1):
@@ -187,10 +187,10 @@ def make_epub():
                 # cover.jpgではない場合かcover.pngではない場合
                 if image_file_name != cover_image_file_name:
                     # .jpgファイルの場合
-                    if re.match("^.+\.[jJ][pP][eE]?[gG]$", image_file_name):
+                    if re.match("^.+\\.[jJ][pP][eE]?[gG]$", image_file_name):
                         file.write('        <item id="' + escape_xml(os.path.splitext(image_file_name)[0]) + '" href="' + escape_xml(image_file_name) + '" media-type="image/jpeg"/>\n')
                     # .pngファイルの場合
-                    elif re.match("^.+\.[pP][nN][gG]$", image_file_name):
+                    elif re.match("^.+\\.[pP][nN][gG]$", image_file_name):
                         file.write('        <item id="' + escape_xml(os.path.splitext(image_file_name)[0]) + '" href="' + escape_xml(image_file_name) + '" media-type="image/png"/>\n')
             file.write('    </manifest>\n')
             file.write('    <spine page-progression-direction="rtl">\n')
@@ -255,7 +255,7 @@ def make_epub():
             file.write('            <ol>\n')
             # .txtファイルの数だけ、くり返し
             for index, text_file_name in enumerate(text_file_name_list):
-                file.write('                <li><a href="index' + str(index + 1) + '.xhtml#episode' + str(index + 1) + '">' + escape_html(re.sub("^[0-9]*[ 　]*|\.[tT][xX][tT]$", "", text_file_name)) + '</a></li>\n')
+                file.write('                <li><a href="index' + str(index + 1) + '.xhtml#episode' + str(index + 1) + '">' + escape_html(re.sub("^[0-9]*[ 　]*|\\.[tT][xX][tT]$", "", text_file_name)) + '</a></li>\n')
             file.write('            </ol>\n')
             file.write('        </nav>\n')
             file.write('    </body>\n')
@@ -280,7 +280,7 @@ def make_epub():
                 if index == 0:
                     file.write('        <h1>' + escape_html(title) + '</h1>\n')
 
-                file.write('        <h2 id="episode' + str(index + 1) + '">' + escape_html(re.sub("^[0-9]*[ 　]*|\.[tT][xX][tT]$", "", text_file_name)) + '</h2>\n')
+                file.write('        <h2 id="episode' + str(index + 1) + '">' + escape_html(re.sub("^[0-9]*[ 　]*|\\.[tT][xX][tT]$", "", text_file_name)) + '</h2>\n')
                 with open(os.path.join(in_dir, text_file_name), "r", encoding="utf-8") as f:
                     while True:
                         text = f.readline()
@@ -289,9 +289,9 @@ def make_epub():
                         # 文末の改行コードを削除
                         text = re.sub("\n$", "", text)
                         # 読み込んだ行が.jpgか.pngで終わる場合
-                        if re.match("^.+\.[jJ][pP][eE]?[gG]$|^.+\.[pP][nN][gG]$", text):
+                        if re.match("^.+\\.[jJ][pP][eE]?[gG]$|^.+\\.[pP][nN][gG]$", text):
                             # imgタグに置換
-                            file.write('        <img id="' + escape_html(re.sub("\.[jJ][pP][eE]?[gG]$|\.[pP][nN][gG]$", "", text)) + '" src="' + escape_html(text) + '" />\n')
+                            file.write('        <img id="' + escape_html(re.sub("\\.[jJ][pP][eE]?[gG]$|\\.[pP][nN][gG]$", "", text)) + '" src="' + escape_html(text) + '" />\n')
                         # 読み込んだ行が空行の場合
                         elif text == "":
                             # <p>全角空白</p>を出力
@@ -303,7 +303,7 @@ def make_epub():
                             text = escape_html(text)
 
                             # 漢字(ひらがなかカタカナ)をルビに置換
-                            text = re.sub("([一-鿋々]+)\(([ぁ-ゖァ-ヺー]+)\)", "<ruby>\\1<rt>\\2</rt></ruby>", text)
+                            text = re.sub("([一-鿋々]+)\\(([ぁ-ゖァ-ヺー]+)\\)", "<ruby>\\1<rt>\\2</rt></ruby>", text)
 
                             # ｜るび対象《ルビ》をルビに置換
                             text = re.sub("｜([^《]+)《([^》]+)》", "<ruby>\\1<rt>\\2</rt></ruby>", text)
