@@ -1286,7 +1286,7 @@ $("makeEPub").onclick = async function () {
     }
 
 
-    var blob = new Blob([await storedZip.zip()], {type: "application/zip"});
+    var blob = new Blob([await storedZip.zip()], {type: "application/epub+zip"});
 
     var url = URL.createObjectURL(blob);
 
