@@ -821,8 +821,8 @@ function StoredZip() {
                 //当zipを作成したOS依存の(zip)外的ファイル属性
                 0x00,
                 0x00,
-                0x00,
-                0x00,
+                0xB4,
+                0x81,
 
                 //対応するローカル ファイル ヘッダーの開始バイトのインデックス番号
                 ((zipLocalFileHeaderStartIndex << 24) >>> 24),
