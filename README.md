@@ -9,3 +9,5 @@ And Ja Free ePub Maker by Python.
 And Ja Free ePub Maker by Java.
 
 JaEPubRecompressor.py zips a directory of a unzipped .epub file as a mimetype file is the first file in the zip file.
+
+And /ModernJavaScriptVersion/ePubMaker.html is modern JavaScript version and deflate compression version.
